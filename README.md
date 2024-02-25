@@ -10,4 +10,4 @@ This project is implemented in Python and uses Azure Speech Services.
 
 # Usage
 
-`python main.py <video_name> <speech_subscription_key>
+`python main.py <video_name> <speech_subscription_key>`
