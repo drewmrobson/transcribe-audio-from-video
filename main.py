@@ -3,17 +3,22 @@ import azure.cognitiveservices.speech as speechsdk
 import time
 import pickle
 import json
+import sys
 
-subscription_key = ""
-speech_region = ""
+# Azure Speech Service subscription key
+subscription_key = sys.argv[2]
 
-video = VideoFileClip("input.mp4")
+# Azure Speech Service region
+speech_region = "australiaeast"
+
+# Get the audio out of the input video e.g. "input.mp4"
+video_name = sys.argv[1]
+video = VideoFileClip(video_name)
 audio = video.audio
 audio.write_audiofile("input.wav")
 
-speech_config = speechsdk.SpeechConfig(subscription_key, speech_region)
-
 # Set up the file as the audio source
+speech_config = speechsdk.SpeechConfig(subscription_key, speech_region)
 audio_config = speechsdk.AudioConfig(filename="input.wav")
 speech_recognizer = speechsdk.SpeechRecognizer(speech_config, audio_config)
 
@@ -27,6 +32,7 @@ def stop_cb(evt):
     """callback that stops continuous recognition upon receiving an event `evt`"""
     print(f"CLOSING on {evt}")
     speech_recognizer.stop_continuous_recognition()
+
     # Let the function modify the flag defined outside this function
     global done
     done = True
@@ -35,6 +41,7 @@ def stop_cb(evt):
 def recognised(evt):
     """Callback to process a single transcription"""
     recognised_text = evt.result.text
+
     # Simply append the new transcription to the running list
     results.append(recognised_text)
     print(f"Audio transcription: '{recognised_text}'")
@@ -50,6 +57,7 @@ speech_recognizer.canceled.connect(stop_cb)
 
 # Create a synchronous continuous recognition, the transcription itself if you will
 speech_recognizer.start_continuous_recognition()
+
 # Set a brief pause between API calls
 while not done:
     time.sleep(0.5)
@@ -57,7 +65,9 @@ while not done:
 # Dump the whole transcription to a pickle file
 with open("output.pickle", "wb") as f:
     pickle.dump(results, f)
-    print("Transcription dumped")
+    print("Transcription dumped to pickle")
 
+# Dump the processed text to JSON
 with open("output.json", "a") as f:
     json.dump(results, f, indent=2)
+    print("Transcription dumped to JSON")
